@@ -710,6 +710,21 @@ test("internal ref to elem.runtimeStyle (bug #7608)", function () {
 	ok( result, "elem.runtimeStyle does not throw exception" );
 });
 
+test("css() on nodes parsed by jQuery.parseHTML (#15098)", function () {
+	expect(1);
+	var result = true;
+
+	// jQuery.parseHTML builds nodes in a document created through
+	// document.implementation, which has no defaultView at all
+	try {
+		jQuery( jQuery.parseHTML("<div style='width:50px'></div>") ).css("width");
+	} catch (e) {
+		result = false;
+	}
+
+	ok( result, "elem.ownerDocument.defaultView does not throw exception" );
+});
+
 test("marginRight computed style (bug #3333)", function() {
 	expect(1);
 
