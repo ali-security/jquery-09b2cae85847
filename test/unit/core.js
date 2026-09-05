@@ -1103,6 +1103,26 @@ test("jQuery.extend(Object, Object)", function() {
 	deepEqual( options2, options2Copy, "Check if not modified: options2 must not be modified" );
 });
 
+test("jQuery.extend( true, ... ) Object.prototype pollution", function() {
+	expect( 3 );
+
+	var shallow,
+		// A parsed JSON payload keeps "__proto__" as an own, enumerable
+		// property, which is exactly how the attack arrives over the wire.
+		payload = window.JSON.parse( "{\"__proto__\": {\"devMode\": true}}" );
+
+	// Sanity check: without an own "__proto__" key the exploit below would
+	// not exercise the vulnerable code path at all.
+	ok( Object.prototype.hasOwnProperty.call( payload, "__proto__" ),
+		"the payload carries an own __proto__ property" );
+
+	jQuery.extend( true, {}, payload );
+	ok( !( "devMode" in {} ), "Object.prototype not polluted by a deep extend" );
+
+	shallow = jQuery.extend( {}, payload );
+	ok( !( "devMode" in shallow ), "prototype of the target not replaced by a shallow extend" );
+});
+
 test("jQuery.each(Object,Function)", function() {
 	expect( 23 );
 
