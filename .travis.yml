@@ -1,3 +1,21 @@
 language: node_js
 node_js:
 - '0.10'
+before_script:
+- sudo apt-get update -qq
+- sudo apt-get install -y apache2 libapache2-mod-php
+- sudo a2enmod headers
+- sed "s#@DOCROOT@#$TRAVIS_BUILD_DIR#g" test/apache-qunit.conf > /tmp/qunit.conf
+- sudo cp /tmp/qunit.conf /etc/apache2/sites-available/qunit.conf
+- sudo a2dissite 000-default
+- sudo a2ensite qunit
+- chmod a+x "$HOME" "$HOME/build"
+- chmod -R a+rX "$TRAVIS_BUILD_DIR"
+- sudo service apache2 restart
+- curl -sI http://127.0.0.1:8080/test/index.html
+- mkdir -p /tmp/phantom
+- curl -sSL https://github.com/Medium/phantomjs/releases/download/v1.9.19/phantomjs-1.9.8-linux-x86_64.tar.bz2
+  | tar xj -C /tmp/phantom --strip-components=1
+script:
+- npm test
+- /tmp/phantom/bin/phantomjs test/phantom-runner.js http://127.0.0.1:8080/test/index.html

@@ -1,0 +1,40 @@
+name: seal-build
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  pack:
+    name: pack npm tarball
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node 0.10.48
+        run: |
+          set -e
+          sudo mkdir -p /opt/node010
+          curl -sSL https://nodejs.org/dist/v0.10.48/node-v0.10.48-linux-x64.tar.gz \
+            | sudo tar xz -C /opt/node010 --strip-components=1
+          echo "/opt/node010/bin" >> "$GITHUB_PATH"
+
+      - name: Generate the dist/cdn release copies
+        run: node .github/cdn-copies.js
+
+      - name: Install npm 1.2.25
+        run: |
+          set -e
+          sudo mkdir -p /opt/npm125
+          curl -sSL https://registry.npmjs.org/npm/-/npm-1.2.25.tgz \
+            | sudo tar xz -C /opt/npm125 --strip-components=1
+
+      - name: Pack the npm tarball
+        run: node /opt/npm125/bin/npm-cli.js pack
+
+      - name: Upload the npm tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-tarball
+          path: jquery-1.11.1.tgz
+          if-no-files-found: error
